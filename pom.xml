@@ -1,12 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.whatnot</groupId>
-    <artifactId>whatnot-webide</artifactId>
+    <artifactId>whatnot-ide</artifactId>
     <version>0.1-SNAPSHOT</version>
     <name>Whatnot Web IDE</name>
     <packaging>jar</packaging>
 	
     <properties>
+        <base.image>gitlab-registry.cern.ch/bcopy/bub-alpine-jre</base.image>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -73,6 +74,59 @@
                         <addResources>true</addResources>
                 </configuration>
            </plugin>
+           
+           
+           <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.4.13</version>
+                <executions>
+                     <execution>
+                       <id>build-image</id>
+                       <phase>package</phase>
+                       <goals> <goal>build</goal> </goals>
+                     </execution>
+                     <execution>
+                      <id>push-image</id>
+                      <phase>deploy</phase>
+                      <goals>
+                        <goal>push</goal>
+                      </goals>
+                      <configuration>
+                        <imageName>bcopy/whatnot-ide</imageName>
+                      </configuration>
+                    </execution>    
+                </executions>
+                <configuration>                     
+                    <imageName>bcopy/whatnot-ide</imageName>
+                    <baseImage>${base.image}</baseImage>
+                    <forceTags>true</forceTags>
+                    <useConfigFile>true</useConfigFile>
+                    <imageTags>
+                       <imageTag>${project.version}</imageTag>
+                    </imageTags>
+                    <workdir>/opt/whatnot-ide</workdir>
+                    <cmd>["java","-jar","${project.artifactId}-${project.version}.jar"]</cmd>
+                    <runs>
+                      <run>mkdir -p /var/log/whatnot-ide</run>
+                    </runs>
+                    <exposes>
+                      <expose>8080</expose>
+                    </exposes>
+                    <volumes>
+                      <volume>/var/log/whatnot-ide</volume>
+                    </volumes>
+                    <resources>
+                       <resource>
+                         <directory>${project.build.directory}/${project.artifactId}-${project.version}.jar</directory>
+                         <targetPath>/opt/</targetPath>
+                       </resource>
+                    </resources>
+                </configuration>
+              </plugin>
         </plugins>
+        
     </build>
+    
+   
 </project>
