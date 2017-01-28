@@ -1,29 +1,29 @@
-function Raspbuggy() {
+function Whatnot() {
   this.statusTimer = null;
   this.statusUpdateCallbacks = [];
 }
 
 
-Raspbuggy.prototype.start = function(){
+Whatnot.prototype.start = function(){
     console.log( "Started");
     this.invokeGetStatusTimeout();
 };
 
-Raspbuggy.prototype.addStatusUpdateCallback = function(listener){
+Whatnot.prototype.addStatusUpdateCallback = function(listener){
     this.statusUpdateCallbacks.push(listener);
 };
 
-Raspbuggy.prototype.invokeGetStatusTimeout = function(){
-    raspbuggy.updateStatus();
+Whatnot.prototype.invokeGetStatusTimeout = function(){
+    whatnot.updateStatus();
     
-    raspbuggy.statusTimer = setTimeout(function(){raspbuggy.invokeGetStatusTimeout()}, 3000);
+    whatnot.statusTimer = setTimeout(function(){whatnot.invokeGetStatusTimeout()}, 3000);
 };
 
-Raspbuggy.prototype.updateStatus= function() {
+Whatnot.prototype.updateStatus= function() {
   $.getJSON( "/status", function(reply) {
-    console.log( "Raspbuggy Status > Running? "+reply.running+" Exit Code : " +reply.exitCode );
+    console.log( "Whatnot Status > Running? "+reply.running+" Exit Code : " +reply.exitCode );
     
-    $.each(raspbuggy.statusUpdateCallbacks, function( cb){
+    $.each(whatnot.statusUpdateCallbacks, function( cb){
             try{
                 this(reply);
             }catch(err){
@@ -33,8 +33,8 @@ Raspbuggy.prototype.updateStatus= function() {
 
   })
   .fail(function() {
-    console.log( "error : Could not obtain raspbuggy  status." );
-    $.each(raspbuggy.statusUpdateCallbacks, function( cb ){
+    console.log( "error : Could not obtain whatnot  status." );
+    $.each(whatnot.statusUpdateCallbacks, function( cb ){
             try{
                 this({running: -3, exitCode: -1});
             }catch(err){
@@ -47,21 +47,21 @@ Raspbuggy.prototype.updateStatus= function() {
 };
 
 
-Raspbuggy.prototype.executeScript= function(scriptContents) {
+Whatnot.prototype.executeScript= function(scriptContents) {
   $.ajaxSetup({ 
     contentType: "application/json"
   });
   $.post( "/execute","{\"scriptText\":\"import time\\nprint 'hello world'\\ntime.sleep(10)\"}", function(reply) {
     if(reply.success){
       // Update the status immediately
-      raspbuggy.updateStatus();
+      whatnot.updateStatus();
     }else{
       window.alert("Script execution failed : "+reply.message);
     }
   },"json");
 //  .fail(function() {
-//    console.log( "error : Could not execute raspbuggy script." );
+//    console.log( "error : Could not execute whatnot script." );
 //  });
 };
 
-raspbuggy = new Raspbuggy();
+whatnot = new Whatnot();
