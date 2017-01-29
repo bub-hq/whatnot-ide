@@ -10,7 +10,7 @@ import subprocess
 import random
 import time
 import threading
-import Queue
+import queue
 import tempfile
 import logging
 
@@ -27,12 +27,12 @@ class ScriptMonitor(object):
         self.m_processInitialized = True
         self.m_process = process
         if(self.m_process.pid != None and self.m_process.poll() == None):
-            print "Starting script process output polling..."
+            print("Starting script process output polling...")
             self.m_stdoutQueue = Queue.Queue()
             self.m_stdoutReader = AsynchronousFileReader(self.m_process.stdout, self.m_stdoutQueue)
             self.m_stdoutReader.start()
         else:
-            print "script process startup failed."
+            print("script process startup failed.")
             
     def abort(self):
         try:
@@ -42,7 +42,7 @@ class ScriptMonitor(object):
             self.m_processInitialized = False
             return True
         except:
-            print "script could not be terminated : ", sys.exc_info()[0]
+            print("script could not be terminated : ", sys.exc_info()[0])
             return False
  
     def isRunning(self):
@@ -113,10 +113,10 @@ class WhatnotService(object):
             scriptFile = open("/tmp/script.py", "w")
             scriptFile.write(scriptData["scriptText"]+"\n")
             scriptFile.close()
-            print "Executing script "+scriptFile.name+" ..."
+            print("Executing script "+scriptFile.name+" ...")
             
             # Starting a new python process (with -u for unbuffered output)
-            scriptProcess = subprocess.Popen(["python", "-u", scriptFile.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=256)
+            scriptProcess = subprocess.Popen(["python3", "-u", scriptFile.name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=256)
             
             if(scriptProcess.pid != None):
                 self.m_scriptMonitor.monitor(scriptProcess)
@@ -130,7 +130,7 @@ class WhatnotService(object):
     def abort(self):
         result = False;
         if (self.m_scriptMonitor != None):
-            print "Aborting script execution"
+            print("Aborting script execution")
             result = self.m_scriptMonitor.abort()
         return {"result":result}
 
@@ -153,13 +153,13 @@ class WhatnotService(object):
     def shutdown(self):
         result = -1
         try:
-            print "Shutting down Whatnot IDE service..."
+            print("Shutting down Whatnot IDE service...")
             if (self.m_scriptMonitor != None and self.m_scriptMonitor.isRunning()):
                 self.m_scriptMonitor.abort()
-            print "Whatnot IDE service shutdown complete."
+            print("Whatnot IDE service shutdown complete.")
             result = 0
         except:
-            print "Failed to shutdown Whatnot IDE service : ", sys.exc_info()[0]
+            print("Failed to shutdown Whatnot IDE service : ", sys.exc_info()[0])
         return  {"result": result}
         
         
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     whatNotService = WhatnotService()
     try:
         WEBAPP_ROOT = os.getenv('WEBAPP_ROOT',os.getcwd()+"/webapp")
-        WEBJARS_ROOT = os.getenv('WEBJARS_ROOT',os.getcwd()+"/webjars")
+        WEBJARS_ROOT = os.getenv('WEBJARS_ROOT',os.getcwd()+"/lib/webjars")
         
         cherrypy.server.socket_host = '0.0.0.0'
         accessLogger = logging.getLogger('cherrypy.access')

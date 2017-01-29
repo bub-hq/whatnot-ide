@@ -1,2 +1,2 @@
-#!/usr/bin/env ash
-python whatnot/main.py
+#!/bin/ash
+PYTHON_PATH=/opt/whatnot-ide/lib python3 lib/main.py
