@@ -20,35 +20,6 @@
 	
     <dependencies>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-tomcat</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-undertow</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-jersey</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.webjars</groupId>
-            <artifactId>webjars-locator</artifactId>
-            <version>0.30</version>
-        </dependency>
-        <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>blockly</artifactId>
             <version>0-SNAPSHOT</version>
@@ -67,16 +38,77 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                        <addResources>true</addResources>
-                </configuration>
-           </plugin>
-           
-           
            <plugin>
+                <groupId>com.jamesward</groupId>
+                <artifactId>unsnapshot-maven-plugin</artifactId>
+                <version>0.2</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>unsnapshot</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>io.reformanda.semper</groupId>
+                <artifactId>dependencyversion-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <executions>
+                    <execution>
+                        <id>set-all</id>
+                        <goals>
+                            <goal>set-version</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+     <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+        <executions>
+          <execution>
+            <id>unpack-dependencies</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                 <artifactItem>
+                   <groupId>org.webjars</groupId>
+                   <artifactId>blockly</artifactId>
+                   <type>jar</type>
+                   <overWrite>true</overWrite>
+                   <includes>META-INF/resources/webjars/blockly/**/*.*</includes>
+                 </artifactItem>
+                 <artifactItem>
+                   <groupId>org.webjars</groupId>
+                   <artifactId>bootstrap</artifactId>
+                   <type>jar</type>
+                   <overWrite>true</overWrite>
+                   <includes>META-INF/resources/webjars/bootstrap/**/*.*</includes>
+                 </artifactItem>
+                 <artifactItem>
+                   <groupId>org.webjars</groupId>
+                   <artifactId>jquery</artifactId>
+                   <type>jar</type>
+                   <overWrite>true</overWrite>
+                   <includes>META-INF/resources/webjars/jquery/**/*.*</includes>
+                 </artifactItem>
+               </artifactItems>
+               <outputDirectory>${project.build.directory}/webjars</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+              <stripVersion>true</stripVersion>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
                 <groupId>com.spotify</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>0.4.13</version>
@@ -105,21 +137,47 @@
                     <imageTags>
                        <imageTag>${project.version}</imageTag>
                     </imageTags>
-                    <workdir>/opt/whatnot-ide</workdir>
-                    <cmd>["java","-jar","${project.artifactId}-${project.version}.jar"]</cmd>
+                    <env>
+                      <WHATNOT_HOME>/opt/whatnot-ide</WHATNOT_HOME>
+                      <WHATNOT_LOGS>/var/log/whatnot-ide</WHATNOT_LOGS>
+                    </env>
+                    <workdir>${WHATNOT_HOME}</workdir>
+                    <cmd>["bin/run.sh"]</cmd>
                     <runs>
-                      <run>mkdir -p /var/log/whatnot-ide</run>
+                      <run>mkdir -p ${WHATNOT_LOGS}</run>
+                      <run>apk --update add py3-cherrypy</run>
+                      <run>chmod 755 ${WHATNOT_HOME}/bin/run.sh</run>
                     </runs>
                     <exposes>
                       <expose>8080</expose>
                     </exposes>
                     <volumes>
-                      <volume>/var/log/whatnot-ide</volume>
+                      <volume>${WHATNOT_LOGS}</volume>
                     </volumes>
                     <resources>
                        <resource>
-                         <directory>${project.build.directory}/${project.artifactId}-${project.version}.jar</directory>
-                         <targetPath>/opt/</targetPath>
+                         <directory>${project.basedir}/src/main/webapp</directory>
+                         <targetPath>${WHATNOT_HOME}/webapp</targetPath>
+                       </resource>
+                       <resource>
+                         <directory>${project.basedir}/src/main/python/whatnot</directory>
+                         <targetPath>${WHATNOT_HOME}/lib</targetPath>
+                       </resource>
+                       <resource>
+                         <directory>${project.build.directory}/webjars/META-INF/resources/webjars/blockly/36eb0787cc5</directory>
+                         <targetPath>${WHATNOT_HOME}/webjars/blockly</targetPath>
+                       </resource>
+                       <resource>
+                         <directory>${project.build.directory}/webjars/META-INF/resources/webjars/bootstrap/${org.webjars:bootstrap:jar.version}</directory>
+                         <targetPath>${WHATNOT_HOME}/webjars/bootstrap</targetPath>
+                       </resource>
+                       <resource>
+                         <directory>${project.build.directory}/webjars/META-INF/resources/webjars/jquery/${org.webjars:jquery:jar.version}</directory>
+                         <targetPath>${WHATNOT_HOME}/webjars/jquery</targetPath>
+                       </resource>
+                       <resource>
+                         <directory>${project.build.directory}/classes/bin</directory>
+                         <targetPath>${WHATNOT_HOME}/bin</targetPath>
                        </resource>
                     </resources>
                 </configuration>
