@@ -168,6 +168,7 @@ if __name__ == '__main__':
     try:
         WEBAPP_ROOT = os.getenv('WEBAPP_ROOT',os.getcwd()+"/webapp")
         WEBJARS_ROOT = os.getenv('WEBJARS_ROOT',os.getcwd()+"/lib/webjars")
+        WEBAPP_PREFIX = os.getenv('WEBAPP_PREFIX',"/")
         
         cherrypy.server.socket_host = '0.0.0.0'
         accessLogger = logging.getLogger('cherrypy.access')
@@ -177,7 +178,7 @@ if __name__ == '__main__':
         # stop any script execution or threads
         cherrypy.engine.subscribe('stop', whatNotService.shutdown)
         
-        cherrypy.quickstart(whatNotService, "/", 
+        cherrypy.quickstart(whatNotService, WEBAPP_PREFIX, 
             {
                   '/':
                   {

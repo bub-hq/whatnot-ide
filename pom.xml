@@ -144,7 +144,7 @@
                       <run>mkdir -p $WHATNOT_HOME</run>
                       <run>mkdir -p $WHATNOT_LOGS</run>
                       <run>echo http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories</run>
-                      <run>apk --update add python3 py3-cherrypy</run>
+                      <run>apk --update add py3-cherrypy</run>
                       <run>chmod 755 $WHATNOT_HOME/bin/run.sh</run>
                     </runs>
                     <workdir>$WHATNOT_HOME</workdir>
