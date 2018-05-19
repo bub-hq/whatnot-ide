@@ -1,5 +1,7 @@
 # Whatnot IDE
 
+![ ](https://github.com/chiby-hq/whatnot-ide/blob/master/modules/ide-webjar/src/main/webapp/media/banner.png?raw=true)
+
 The *Whatnot IDE* is a generic Javascript integrated development environment.
 It allows to develop applications online for a variety of platforms, and plug-in functionality generically.
 
