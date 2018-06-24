@@ -1,28 +1,23 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.whatnot</groupId>
-    <artifactId>whatnot-ide</artifactId>
-    <version>0.1-SNAPSHOT</version>
-    <name>Whatnot Web IDE</name>
-    <packaging>jar</packaging>
-	
-    <properties>
-        <base.image>resin/armhf-alpine:edge</base.image>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.4.3.RELEASE</version>
-    </parent>
+ 
     
+    <parent>
+	  <groupId>com.github.chibyhq.whatnot</groupId>
+      <artifactId>ide-reactor</artifactId>
+      <version>1.1-SNAPSHOT</version>
+      <relativePath>../..</relativePath>
+	</parent>
+	
+    <artifactId>ide-webjar</artifactId>
+    <name>Whatnot IDE :: Vanilla JS Webjar packaging</name>
+    <packaging>jar</packaging>
 	
     <dependencies>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>blockly</artifactId>
-            <version>0-SNAPSHOT</version>
+            <version>b35c0fbfa2-1</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
@@ -34,147 +29,51 @@
             <artifactId>jquery</artifactId>
             <version>1.9.1</version>
         </dependency>
-</dependencies>
+    </dependencies>
 
     <build>
         <plugins>
-           <plugin>
-                <groupId>com.jamesward</groupId>
-                <artifactId>unsnapshot-maven-plugin</artifactId>
-                <version>0.2</version>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>unsnapshot</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>io.reformanda.semper</groupId>
-                <artifactId>dependencyversion-maven-plugin</artifactId>
-                <version>1.0.0</version>
-                <executions>
-                    <execution>
-                        <id>set-all</id>
-                        <goals>
-                            <goal>set-version</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-     <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.10</version>
-        <executions>
-          <execution>
-            <id>unpack-dependencies</id>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-               <includeGroupIds>org.webjars</includeGroupIds>
-               <includes>META-INF/resources/webjars/**/*.*</includes>
-              <overWriteReleases>false</overWriteReleases>
-              <overWriteSnapshots>true</overWriteSnapshots>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <phase>process-sources</phase>
-            <configuration>
-              <target>
-                <mkdir dir="${project.build.directory}/webjars"/>
-                <copy todir="${project.build.directory}/webjars" overwrite="true">
-                    <fileset dir="${project.build.directory}/dependency/META-INF/resources/webjars"/>
-                    <mapper type="regexp" from="^([a-zA-Z0-9\-\_\.]*?)/.*?/(.*)" to="\1/\2" />
-                </copy>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-                <groupId>com.spotify</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.4.13</version>
-                <executions>
-                     <execution>
-                       <id>build-image</id>
-                       <phase>package</phase>
-                       <goals> <goal>build</goal> </goals>
-                     </execution>
-                     <execution>
-                      <id>push-image</id>
-                      <phase>deploy</phase>
-                      <goals>
-                        <goal>push</goal>
-                      </goals>
-                      <configuration>
-                        <imageName>bcopy/whatnot-ide</imageName>
-                      </configuration>
-                    </execution>    
-                </executions>
-                <configuration>                     
-                    <imageName>bcopy/whatnot-ide</imageName>
-                    <baseImage>${base.image}</baseImage>
-                    <forceTags>true</forceTags>
-                    <useConfigFile>true</useConfigFile>
-                    <imageTags>
-                       <imageTag>${project.version}</imageTag>
-                    </imageTags>
-                    <env>
-                      <WHATNOT_HOME>/opt/whatnot-ide</WHATNOT_HOME>
-                      <WHATNOT_LOGS>/var/log/whatnot-ide</WHATNOT_LOGS>
-                      <LANG>C.UTF-8</LANG>
-                    </env>
-                    <runs>
-                      <run>mkdir -p $WHATNOT_HOME</run>
-                      <run>mkdir -p $WHATNOT_LOGS</run>
-                      <run>echo http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories</run>
-                      <run>apk --update add py3-cherrypy</run>
-                      <run>chmod 755 $WHATNOT_HOME/bin/run.sh</run>
-                    </runs>
-                    <workdir>$WHATNOT_HOME</workdir>
-                    <cmd>["bin/run.sh"]</cmd>
-                    <exposes>
-                      <expose>8080</expose>
-                    </exposes>
-                    <volumes>
-                      <volume>$WHATNOT_LOGS</volume>
-                    </volumes>
-                    <resources>
-                       <resource>
-                         <directory>${project.basedir}/src/main/webapp</directory>
-                         <targetPath>${WHATNOT_HOME}/webapp</targetPath>
-                       </resource>
-                       <resource>
-                         <directory>${project.basedir}/src/main/python/whatnot</directory>
-                         <targetPath>${WHATNOT_HOME}/lib</targetPath>
-                       </resource>
-                       <resource>
-                         <directory>${project.build.directory}/webjars</directory>
-                         <targetPath>${WHATNOT_HOME}/lib/webjars</targetPath>
-                       </resource>
-                       <resource>
-                         <directory>${project.build.directory}/classes/bin</directory>
-                         <targetPath>${WHATNOT_HOME}/bin</targetPath>
-                       </resource>
-                    </resources>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.10</version>
+            <executions>
+              <execution>
+                <id>unpack-dependencies</id>
+                <goals>
+                  <goal>unpack-dependencies</goal>
+                </goals>
+                <configuration>
+                   <includeGroupIds>org.webjars</includeGroupIds>
+                   <includes>META-INF/resources/webjars/**/*.*</includes>
+                  <overWriteReleases>false</overWriteReleases>
+                  <overWriteSnapshots>true</overWriteSnapshots>
                 </configuration>
-              </plugin>
+              </execution>
+            </executions>
+          </plugin>
+          
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.8</version>
+            <executions>
+              <execution>
+                <phase>process-sources</phase>
+                <configuration>
+                  <target>
+                    <mkdir dir="${project.build.directory}/webjars"/>
+                    <copy todir="${project.build.directory}/webjars" overwrite="true">
+                        <fileset dir="${project.build.directory}/dependency/META-INF/resources/webjars"/>
+                        <mapper type="regexp" from="^([a-zA-Z0-9\-\_\.]*?)/.*?/(.*)" to="\1/\2" />
+                    </copy>
+                  </target>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
         
     </build>
